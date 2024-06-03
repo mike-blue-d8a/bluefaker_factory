@@ -66,3 +66,77 @@ python3 blue_fkdata_gen.py --file mytestdata --records 10000 --format parquet --
 ```
 pip install -r requirements.txt
 ```
+
+## Example Workflow for duckdb:
+
+```
+# Run the generator based off of schema yml file called game_a_user.yml
+# This command created a parquet file of 10,000 records with the schema defined in the yml.
+
+python3 blue_fkdata_gen.py --file game_a_tdata --records 10000 --format parquet --schema game_a_user.yml
+
+Generating Fake Data with '10000' records....
+
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10000/10000 [00:06<00:00, 1558.48it/s]
+
+Sample Data:
++--------------------------------+---------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
+|            Email_Id            |      Name     |  Gamer_Id  |                                                                   Device                                                                  |     Phone_Number    | Spent |
++--------------------------------+---------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
+|     thomas.riggs@lynch.org     |  Thomas Riggs |  phiggins  | Mozilla/5.0 (iPhone; CPU iPhone OS 4_3_5 like Mac OS X) AppleWebKit/533.0 (KHTML, like Gecko) CriOS/28.0.880.0 Mobile/70R240 Safari/533.0 |  373-318-2820x8911  |  1325 |
+|     amber.hurst@hanson.net     |  Amber Hurst  | jennifer65 | Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/532.0 (KHTML, like Gecko) CriOS/51.0.899.0 Mobile/20X692 Safari/532.0 |     389-258-7806    |  7459 |
+| carrie.guzman@black-graves.org | Carrie Guzman |  robert20  |          Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_10_3) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/55.0.846.0 Safari/535.1          | +1-348-704-9598x804 |  2157 |
++--------------------------------+---------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
+
+Created file: game_a_tdata.parquet
+Number of rows added: 10000
+
+# DuckDB is a serverless db which makes it easy to test.
+# I am using the  duckcli in this example:
+
+#I am persisting the data by passing the name game_test_data.db but you could do this from memory.
+
+blue_fk_data_gen % duckcli game_test_data.db
+Version: 0.2.1
+GitHub: https://github.com/dbcli/duckcli
+game_test_data.db> SELECT count(*) FROM read_parquet('game_a_tdata.parquet')
++--------------+
+| count_star() |
++--------------+
+| 10000        |
++--------------+
+1 row in set
+Time: 0.014s
+
+game_test_data.db> CREATE TABLE game_a_test AS SELECT * FROM read_parquet('game_a_tdata.parquet') WHERE FALSE;
++-------+
+| Count |
++-------+
+| 0     |
++-------+
+1 row in set
+Time: 0.013s
+
+game_test_data.db> INSERT INTO game_a_test SELECT * FROM read_parquet('game_a_tdata.parquet');
++-------+
+| Count |
++-------+
+| 10000 |
++-------+
+1 row in set
+Time: 0.039s
+
+game_test_data.db> select * from game_a_test limit 5;
++--------------------------------+---------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
+| Email_Id                       | Name          | Gamer_Id       | Device                                                                                                                                    | Phone_Number        | Spent |
++--------------------------------+---------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
+| thomas.riggs@lynch.org         | Thomas Riggs  | phiggins       | Mozilla/5.0 (iPhone; CPU iPhone OS 4_3_5 like Mac OS X) AppleWebKit/533.0 (KHTML, like Gecko) CriOS/28.0.880.0 Mobile/70R240 Safari/533.0 | 373-318-2820x8911   | 1325  |
+| amber.hurst@hanson.net         | Amber Hurst   | jennifer65     | Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/532.0 (KHTML, like Gecko) CriOS/51.0.899.0 Mobile/20X692 Safari/532.0 | 389-258-7806        | 7459  |
+| carrie.guzman@black-graves.org | Carrie Guzman | robert20       | Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_10_3) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/55.0.846.0 Safari/535.1                   | +1-348-704-9598x804 | 2157  |
+| corey.crosby@torres.info       | Corey Crosby  | upowell        | Mozilla/5.0 (compatible; MSIE 7.0; Windows CE; Trident/5.1)                                                                               | 783.733.1686x130    | 9193  |
+| andrew.thomas@day-freeman.com  | Andrew Thomas | leonardstephen | Mozilla/5.0 (iPad; CPU iPad OS 17_4 like Mac OS X) AppleWebKit/532.2 (KHTML, like Gecko) FxiOS/18.0g0894.0 Mobile/05E299 Safari/532.2     | (240)462-3874       | 4252  |
++--------------------------------+---------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
+5 rows in set
+Time: 0.009s
+game_test_data.db>
+```
