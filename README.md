@@ -2,6 +2,15 @@
 
 blue_fkdata_gen is a versatile tool for generating fake data in CSV, Parquet, and JSON formats. It leverages the `faker` module to create realistic fake data and allows easy configuration through YAML files. With blue_fkdata_gen, you can quickly generate files containing anywhere from 100 to millions of rows, all within minutes, thanks to its concurrency capabilities. Additionally, you can append data to existing files.
 
+### Why? 
+
+If you ever need realistic data for testing a pipeline, database, or any other application, blue_fkdata_gen provides a safe and efficient way to create data without using sensitive production data, which can be vulnerable. 
+
+blue_fkdata_gen uses faker functions as the dtypes that are mapped out in the function `get_fake_data()`. Here can see what the avaible mapped out faker types are. There are some  conditions added.  Like name and email I have combined them so you can have the same name as name and email.  ie Bob Smith and bob.smith@whatever.com 
+
+Docs to the faker module:
+https://faker.readthedocs.io/en/master/index.html
+
 ## Configuration
 
 In your YAML configuration file, specify the columns you want and the corresponding `faker` data types. For example:
