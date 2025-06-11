@@ -1,5 +1,9 @@
 # Make sure no data files get commited and pushed. 
 data/
+# Build system directories
+build/
+dist/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
