@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bluefaker-factory"
+version = "0.1.0"
+description = "Generate fake data for ML and fraud detection scenarios"
+authors = [
+    {name = "Michael Blue"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+
+dependencies = [
+    "Faker==25.3.0",
+    "fastparquet==2024.5.0",
+    "numpy==1.26.4",
+    "pandas==2.2.2",
+    "prettytable==3.10.0",
+    "pyarrow==16.1.0",
+    "PyYAML==6.0.1",
+    "tqdm==4.66.4",
+    "duckdb",
+    "matplotlib",
+    "seaborn",
+    "notebook",
+    "ipykernel"
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "pytest"
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+
