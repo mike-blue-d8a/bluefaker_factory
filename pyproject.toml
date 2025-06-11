@@ -7,7 +7,7 @@ name = "bluefaker-factory"
 version = "0.1.0"
 description = "Generate fake data for ML and fraud detection scenarios"
 authors = [
-    {name = "Michael Blue"}
+    { name = "Michael Blue" }
 ]
 readme = "README.md"
 requires-python = ">=3.9"
@@ -35,7 +35,12 @@ dev = [
     "pytest"
 ]
 
+[tool.setuptools]
+# Let setuptools know where your packages are
+packages = ["logic_modules"]
+py-modules = ["bluefaker"]
+
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ["py311"]
 
