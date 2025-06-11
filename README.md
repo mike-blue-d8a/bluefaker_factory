@@ -24,7 +24,8 @@ bluefaker_factory/
 │   ├── raw/                  # Generated datasets
 │   └── database/             # Optional local DuckDB files
 ├── examples/
-│   └── sql_fraud/            # Sample SQL for analysis
+│   ├──sql_fraud/            # Sample SQL for analysis
+|   └── notebooks/            # Sample Jupyter Notebook
 |-- logic_modules/            # Domain-specific business logic plugins
 ├── schemas/                  # YAML schemas (fraud, churn, etc.)
 ├── scripts/                  # Shell wrappers for schema-specific generation
@@ -80,11 +81,23 @@ python bluefaker.py --schema schemas/fraud_schema.yaml \
 ```
 This will create a parquet file called `fraud_data01.parquet` with 100,000 rows of fake synthetic fraud data. 
 
-### Run an example script
+### Run an example scripts
+
+```bash
+───────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────-
+       │ File: scripts/create_fake_fraud_data.sh
+───────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1   │ python bluefaker.py --schema schemas/fraud_schema.yaml \
+   2   │                     --records 100000 \
+   3   │                     --format parquet \
+   4   │                     --file data/raw/fraud_data01
+───────┴────────────────────────────────────────────────────────────────
+```
 
 ```bash
 bash scripts/create_fake_fraud_data.sh
 ```
+
 Example:
 ```bash
 (.venv) $ time ./scripts/create_fake_fraud_data.sh
