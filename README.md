@@ -17,16 +17,16 @@ A modular, schema-driven synthetic data generator built with [Faker](https://fak
 
 ## Directory Structure
 
-```
+```text
 bluefaker_factory/
 ├── bluefaker.py              # Main data generation engine
 ├── data/
 │   ├── raw/                  # Generated datasets
 │   └── database/             # Optional local DuckDB files
 ├── examples/
-│   ├──sql_fraud/            # Sample SQL for analysis
-|   └── notebooks/            # Sample Jupyter Notebook
-|-- logic_modules/            # Domain-specific business logic plugins
+│   ├── sql_fraud/            # Sample SQL for analysis
+│   └── notebooks/            # Sample Jupyter Notebooks
+├── logic_modules/            # Domain-specific business logic plugins
 ├── schemas/                  # YAML schemas (fraud, churn, etc.)
 ├── scripts/                  # Shell wrappers for schema-specific generation
 ├── requirements.txt          # Python dependencies
