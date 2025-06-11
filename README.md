@@ -1,142 +1,304 @@
-# blue_fkdata_gen
+#  bluefaker_factory
 
-blue_fkdata_gen is a versatile tool for generating fake data in CSV, Parquet, and JSON formats. It leverages the `faker` module to create realistic fake data and allows easy configuration through YAML files. With blue_fkdata_gen, you can quickly generate files containing anywhere from 100 to millions of rows, all within minutes, thanks to its concurrency capabilities. Additionally, you can append data to existing files.
+A modular, schema-driven synthetic data generator built with [Faker](https://faker.readthedocs.io/en/master/) for simulating rich, realistic datasets. Ideal for machine learning testing, analytics development, data engineering demos, and pipeline validation.
 
-### Why? 
+---
 
-If you ever need realistic data for testing a pipeline, database, or any other application, blue_fkdata_gen provides a safe and efficient way to create data without using sensitive production data, which can be vulnerable. 
+## Features
 
-blue_fkdata_gen uses faker functions as the dtypes that are mapped out in the function `get_fake_data()`. Here can see what the avaible mapped out faker types are. There are some  conditions added.  Like name and email I have combined them so you can have the same name as name and email.  ie Bob Smith and bob.smith@whatever.com 
+- YAML-based schema definitions for customizable data types
+- Parallel data generation for high performance
+- Output in CSV, Parquet, or JSON
+- Built-in support for domains like churn, fraud, transactions, and support tickets
+- Includes SQL examples and Examples use DuckDB for quick integration
+- Modular plugins for injecting custom domain specific business logic
 
-Docs to the faker module:
-https://faker.readthedocs.io/en/master/index.html
+---
 
-## Configuration
+## Directory Structure
 
-In your YAML configuration file, specify the columns you want and the corresponding `faker` data types. For example:
+```
+bluefaker_factory/
+├── bluefaker.py              # Main data generation engine
+├── data/
+│   ├── raw/                  # Generated datasets
+│   └── database/             # Optional local DuckDB files
+├── examples/
+│   └── sql_fraud/            # Sample SQL for analysis
+|-- logic_modules/            # Domain-specific business logic plugins
+├── schemas/                  # YAML schemas (fraud, churn, etc.)
+├── scripts/                  # Shell wrappers for schema-specific generation
+├── requirements.txt          # Python dependencies
+└── README.md                 # You're reading it
+````
+
+---
+
+## 
+Usage
+
+### Install dependencies
+```bash
+pip install -r requirements.txt
+````
+
+### Generate data with a YAML schema
+
+```bash
+python bluefaker.py \
+  --schema schemas/YOUR_SCHEMA.yaml \
+  --records 10000 \
+  --format parquet \
+  --file data/raw/YOUR_DATA_NAME
+```
+
+You can also append data to an existing file using `--append`.
+
+If you already have a file with data that matches your schema, you can use `--append` to add more rows to it. For example, the command below will add 100,000 additional rows:
+
+```bash
+python bluefaker.py \
+  --schema schemas/YOUR_SCHEMA.yaml \
+  --records 100000 \
+  --format parquet \
+  --file data/raw/YOUR_DATA_NAME \
+  --append
+```
+
+---
+
+## Example: Generating 100,000 Fraud Records
+
+Here’s an example of generating 100K fraud records using a shell script wrapper:
+
+**`scripts/create_fake_fraud_data.sh`**
+```bash
+python bluefaker.py --schema schemas/fraud_schema.yaml \
+                       --records 100000 \
+                       --format parquet \
+                       --file data/raw/fraud_data01
+```
+This will create a parquet file called `fraud_data01.parquet` with 100,000 rows of fake synthetic fraud data. 
+
+### Run an example script
+
+```bash
+bash scripts/create_fake_fraud_data.sh
+```
+Example:
+```bash
+(.venv) $ time ./scripts/create_fake_fraud_data.sh
+
+Generating Fake Data with '100000' records....
+
+100%|███████████████████████████████████████████████████| 100000/100000 [00:25<00:00, 3998.42it/s]
+
+Sample Data:
++--------------------------------------+----------------+---------------------------+------------+-----+-------------+--------------+---------------+-----------+--------------------+----------------------+------------------------------------------------------------------+-------------+------------+---------+--------------+--------------+
+|                  ID                  |      Name      |           Email           |   Gender   | Age |   Country   | Credit_Score | Annual_Income | Card_Type | Transaction_Amount | Transaction_Location |                              Device                              | Time_Of_Day | Fraudulent | Churned | VIP_Customer | At_Risk_Flag |
++--------------------------------------+----------------+---------------------------+------------+-----+-------------+--------------+---------------+-----------+--------------------+----------------------+------------------------------------------------------------------+-------------+------------+---------+--------------+--------------+
+| 36dfdc6a-dbb6-4160-8e3b-45e7aff187bc |  Erin Finley   |   erin.finley@clark.info  | Non-binary |  52 |   Nigeria   |     565      |     163199    |     b     |       546.83       |      Webershire      | Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 5.01; Trident/4.1) |   06:28:36  |    True    |   True  |    False     |    False     |
+| 1de49109-29a2-4021-a66d-24160d58d10f | Kristen Austin | kristen.austin@garcia.com | Non-binary |  57 | Switzerland |     382      |     139646    |     c     |       875.08       | West Matthewborough  | Opera/9.59.(Windows NT 5.01; sl-SI) Presto/2.9.181 Version/12.00 |   02:48:07  |   False    |   True  |    False     |    False     |
+| 1a2a894b-c7d6-4929-bcb8-eb419845f96b |  Andrew Potts  |  andrew.potts@rowland.com | Non-binary |  60 |    Angola   |     424      |     39213     |     b     |       542.5        |   North Jacobville   | Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.2; Trident/4.0)  |   20:58:17  |   False    |   True  |    False     |    False     |
++--------------------------------------+----------------+---------------------------+------------+-----+-------------+--------------+---------------+-----------+--------------------+----------------------+------------------------------------------------------------------+-------------+------------+---------+--------------+--------------+
+
+Created file: ../data/raw/fraud_data01.parquet  
+Number of rows added: 100000
+```
+This create the file with 100k rows in 25 seconds. 
+
+---
+
+## Available Schemas
+
+| Schema                       | Purpose                                          |
+| ---------------------------- | ------------------------------------------------ |
+| `fraud_schema.yaml`          | Simulates transactions with fraud logic          |
+| `churn_schema.yaml`          | Tracks engagement and churn behaviors            |
+| `transaction_schema.yaml`    | E-commerce or financial transaction data         |
+| `support_ticket_schema.yaml` | Customer support and escalation flows            |
+| `ml_schema.yml`              | General-purpose features for ML training/testing |
+
+> You can create your own by copying an existing one and modifying columns/types.
+
+## Extendable Rule-Based Logic (Plugin)
+
+To simulate realistic behavioral signals in your synthetic data like **fraud**, **churn**, or **VIP customer patterns** — `bluefaker_factory` supports **pluggable domain logic modules**.
+
+Each YAML schema can declare one or more `domains`, and the generator will dynamically apply the corresponding rule logic from the `logic_modules/` folder.
+
+### Example Schema Snippet
 
 ```yaml
-columns:
-  - column: Email_Id
-    dtype: email
+domains:
+  - fraud
+  - churn
+
+schema:
+  - column: ID
+    dtype: uuid4
   - column: Name
     dtype: name
-  - column: Gamer_Id
-    dtype: user_name
-  - column: Device
-    dtype: user_agent
-  - column: Phone_Number
-    dtype: phone_number
+  - column: Email
+    dtype: email
+  ......
+
+```
+
+This will automatically load and apply:
+
+* `logic_modules/fraud.py`
+* `logic_modules/churn.py`
+
+---
+
+### How It Works
+
+Each logic module (e.g. `fraud.py`, `churn.py`, etc.) must define an `apply(row)` function that adds fields, flags, or modifications to the generated row.
+
+Example logic (`logic_modules/churn.py`):
+
+```python
+def apply(row):
+    if row.get("Subscription_Level") == "Free" and row.get("Num_Sessions", 0) < 10:
+        row["Churned"] = True
+    return row
+```
+
+The main generator uses Python's `importlib` to load these dynamically based on the `domains` listed in the schema.
+
+---
+
+### Add Your Own Logic
+
+1. Create a new file in `logic_modules/`, like `vip.py`
+2. Define an `apply(row)` function inside it
+3. Reference it in your schema YAML:
+
+```yaml
+domains:
+  - vip
+```
+
+That’s it, your logic is now applied automatically during data generation.
+
+---
+
+## Analyze the Data
+
+Use DuckDB, pandas, or SQL to analyze:
+
+```sql
+SELECT Country, COUNT(*) AS total, AVG(Transaction_Amount)
+FROM read_parquet('data/raw/fraud_data.parquet')
+GROUP BY Country
+ORDER BY total DESC
+LIMIT 10;
+```
+
+Or use included SQL in `examples/sql_fraud/`.
+
+---
+
+## Quickstart with DuckDB for quick exploration 🦆
+
+DuckDB is a lightweight SQL engine optimized for analytics. You can explore your generated datasets without any setup.
+
+It is great for many things but a few:
+
+* **Data scientists** exploring outputs interactively
+* **Engineers** validating fake data pipelines
+* **Analysts** prototyping queries without a full database setup
+
+### Install DuckDB Python Libraries
+
+```bash
+pip install duckdb
+```
+
+### To Get the CLI (duckdb shell command)
+You need to install it separately via one of the following:
+
+🔹 macOS (with Homebrew)
+```bash
+brew install duckdb
+```
+🔹 Linux (Debian/Ubuntu)
+```bash
+sudo apt install duckdb
+```
+
+🔹 Windows
+Use the DuckDB Windows installer or extract the CLI binary manually from GitHub releases.
+
+Or download the binary from the official site:
+👉 https://duckdb.org/docs/installation/
+
+### Run SQL directly from the CLI
+
+#### In memmory:
+```bash
+duckdb
+````
+
+#### Or to persist the data on disk:
+
+```bash
+
+duckdb data/database/blue_duck.db
+
+```
+
+Then query a Parquet file:
+
+```sql
+SELECT * FROM 'data/raw/fraud_data.parquet' LIMIT 5;
+
+SELECT
+  Country,
+  COUNT(*) AS total,
+  SUM(CASE WHEN Fraudulent THEN 1 ELSE 0 END) AS fraud_count
+FROM read_parquet('data/raw/fraud_data.parquet')
+GROUP BY Country
+ORDER BY fraud_count DESC
+LIMIT 10;
+```
+
+To create a native table from a file:
+```sql
+CREATE TABLE fraud_data AS 
+SELECT * FROM read_parquet('fraud_data01.parquet');
+```
+To Quit:
+`.q`
+
+### Use DuckDB in Python
+
+```python
+import duckdb
+
+df = duckdb.query("SELECT * FROM 'data/raw/fraud_data.parquet'").to_df()
+print(df.head())
+```
+
+## License
+
+MIT
+
+---
+
+## Contributing
+
+Ideas? Bug fixes? PRs are welcome!
+
+---
+
+```
+
+---
+
 ```
 
 
-## Example Usage:
 
-```
-python3 blue_fkdata_gen.py --file mytestdata --records 10000 --format parquet --schema test_schema.yml
-```
 
-## Sample output
-```
-Generating Fake Data with '10000' records....
-
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10000/10000 [00:05<00:00, 1668.28it/s]
-
-Sample Data:
-+-----------------------------+----------------+---------------+-------------------------------------------------------------------------------------------------+--------------------+
-|           Email_Id          |      Name      |    Gamer_Id   |                                              Device                                             |    Phone_Number    |
-+-----------------------------+----------------+---------------+-------------------------------------------------------------------------------------------------+--------------------+
-| roger.schwartz@ferguson.com | Roger Schwartz |   browneric   | Mozilla/5.0 (Windows NT 6.0; ht-HT; rv:1.9.1.20) Gecko/8189-08-02 16:57:46.645020 Firefox/3.6.4 |     9066232881     |
-|   edward.james@walker.biz   |  Edward James  |  ravenparker  |                   Mozilla/5.0 (compatible; MSIE 5.0; Windows 95; Trident/3.0)                   | (958)521-2763x1161 |
-|   douglas.garza@holmes.biz  | Douglas Garza  | johnsonjoshua |   Mozilla/5.0 (X11; Linux x86_64; rv:1.9.6.20) Gecko/7958-09-05 14:17:35.965302 Firefox/3.6.19  |    564-921-1439    |
-+-----------------------------+----------------+---------------+-------------------------------------------------------------------------------------------------+--------------------+
-
-Created file: mytestdata.parquet
-Number of rows added: 10000
-```
-
-### If you want to  append rows to a file that exist:
-
-```
-python3 blue_fkdata_gen.py --file mytestdata --records 10000 --format parquet --schema test_schema.yml -a
-```
-
-## To Install
-
-```
-pip install -r requirements.txt
-```
-
-## Example Workflow for duckdb:
-
-```
-# Run the generator based off of schema yml file called game_a_user.yml
-# This command created a parquet file of 10,000 records with the schema defined in the yml.
-
-python3 blue_fkdata_gen.py --file game_a_tdata --records 10000 --format parquet --schema game_a_user.yml
-
-Generating Fake Data with '10000' records....
-
-100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10000/10000 [00:06<00:00, 1558.48it/s]
-
-Sample Data:
-+--------------------------------+---------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
-|            Email_Id            |      Name     |  Gamer_Id  |                                                                   Device                                                                  |     Phone_Number    | Spent |
-+--------------------------------+---------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
-|     thomas.riggs@lynch.org     |  Thomas Riggs |  phiggins  | Mozilla/5.0 (iPhone; CPU iPhone OS 4_3_5 like Mac OS X) AppleWebKit/533.0 (KHTML, like Gecko) CriOS/28.0.880.0 Mobile/70R240 Safari/533.0 |  373-318-2820x8911  |  1325 |
-|     amber.hurst@hanson.net     |  Amber Hurst  | jennifer65 | Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/532.0 (KHTML, like Gecko) CriOS/51.0.899.0 Mobile/20X692 Safari/532.0 |     389-258-7806    |  7459 |
-| carrie.guzman@black-graves.org | Carrie Guzman |  robert20  |          Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_10_3) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/55.0.846.0 Safari/535.1          | +1-348-704-9598x804 |  2157 |
-+--------------------------------+---------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
-
-Created file: game_a_tdata.parquet
-Number of rows added: 10000
-
-# DuckDB is a serverless db which makes it easy to test.
-# I am using the  duckcli in this example:
-
-#I am persisting the data by passing the name game_test_data.db but you could do this from memory.
-
-blue_fk_data_gen % duckcli game_test_data.db
-Version: 0.2.1
-GitHub: https://github.com/dbcli/duckcli
-game_test_data.db> SELECT count(*) FROM read_parquet('game_a_tdata.parquet')
-+--------------+
-| count_star() |
-+--------------+
-| 10000        |
-+--------------+
-1 row in set
-Time: 0.014s
-
-game_test_data.db> CREATE TABLE game_a_test AS SELECT * FROM read_parquet('game_a_tdata.parquet') WHERE FALSE;
-+-------+
-| Count |
-+-------+
-| 0     |
-+-------+
-1 row in set
-Time: 0.013s
-
-game_test_data.db> INSERT INTO game_a_test SELECT * FROM read_parquet('game_a_tdata.parquet');
-+-------+
-| Count |
-+-------+
-| 10000 |
-+-------+
-1 row in set
-Time: 0.039s
-
-game_test_data.db> select * from game_a_test limit 5;
-+--------------------------------+---------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
-| Email_Id                       | Name          | Gamer_Id       | Device                                                                                                                                    | Phone_Number        | Spent |
-+--------------------------------+---------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
-| thomas.riggs@lynch.org         | Thomas Riggs  | phiggins       | Mozilla/5.0 (iPhone; CPU iPhone OS 4_3_5 like Mac OS X) AppleWebKit/533.0 (KHTML, like Gecko) CriOS/28.0.880.0 Mobile/70R240 Safari/533.0 | 373-318-2820x8911   | 1325  |
-| amber.hurst@hanson.net         | Amber Hurst   | jennifer65     | Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/532.0 (KHTML, like Gecko) CriOS/51.0.899.0 Mobile/20X692 Safari/532.0 | 389-258-7806        | 7459  |
-| carrie.guzman@black-graves.org | Carrie Guzman | robert20       | Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_10_3) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/55.0.846.0 Safari/535.1                   | +1-348-704-9598x804 | 2157  |
-| corey.crosby@torres.info       | Corey Crosby  | upowell        | Mozilla/5.0 (compatible; MSIE 7.0; Windows CE; Trident/5.1)                                                                               | 783.733.1686x130    | 9193  |
-| andrew.thomas@day-freeman.com  | Andrew Thomas | leonardstephen | Mozilla/5.0 (iPad; CPU iPad OS 17_4 like Mac OS X) AppleWebKit/532.2 (KHTML, like Gecko) FxiOS/18.0g0894.0 Mobile/05E299 Safari/532.2     | (240)462-3874       | 4252  |
-+--------------------------------+---------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-------+
-5 rows in set
-Time: 0.009s
-game_test_data.db>
-```

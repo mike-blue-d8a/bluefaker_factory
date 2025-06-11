@@ -6,6 +6,8 @@ import yaml
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 from prettytable import PrettyTable
+import random
+import importlib
 
 # Create an instance of Faker
 fake = Faker('en-US')
@@ -18,7 +20,11 @@ def generate_name_and_email():
     return name, email
 
 # Function to map datatype to faker function
-def get_fake_data(datatype, name=None, email=None):
+def get_fake_data(datatype, name=None, email=None, options=None):
+    # Handle options if specified
+    if datatype == "random_element" and isinstance(options, list) and options:
+        return fake.random_element(elements=options)
+
     data_type_mapper = {
         'str': fake.word,
         'name': lambda: name,
@@ -179,15 +185,47 @@ def get_fake_data(datatype, name=None, email=None):
         #'pydate_range': fake.pydate_range,
         #'pydate_time': fake.pydate_time,
         #'pydate_time_range': fake.pydate_time_range,
+        # Add to the map
+        # Controlled ML-style types
+    	'gender': lambda: random.choice(["Male", "Female", "Non-binary"]),
+    	'subscription_level': lambda: random.choice(["Free", "Basic", "Premium", "Enterprise"]),
+    	'num_sessions': lambda: random.randint(1, 100),
+    	'credit_score': lambda: random.randint(300, 850),
+    	'annual_income': lambda: random.randint(30000, 200000),
+    	'last_purchase_amount': lambda: round(random.uniform(10.0, 1000.0), 2),
+    	'avg_session_duration_min': lambda: round(random.uniform(1.0, 90.0), 2),
+    	'pages_visited': lambda: random.randint(1, 50),
+    	'age': lambda: random.randint(18, 90),
+
     }
     
     # Return the generated fake data based on the datatype
     return data_type_mapper.get(datatype, fake.word)()
 
-# Function to generate a single row of data
 def generate_row(schema):
     name, email = generate_name_and_email()
-    return {item['column']: get_fake_data(item['dtype'], name=name, email=email) for item in schema['schema']}
+
+    row = {
+    item['column']: get_fake_data(
+        item['dtype'],
+        name=name,
+        email=email,
+        options=item.get("options")  # ✅ Pass options if present
+    )
+    for item in schema['schema']
+}
+
+
+    domains = schema.get("domains", [])
+
+    for domain in domains:
+        try:
+            mod = importlib.import_module(f"logic_modules.{domain}")
+            row = mod.apply(row)
+        except ModuleNotFoundError:
+            print(f"[WARN] No logic module found: {domain}")
+
+    return row
 
 # Wrapper function to generate row for multiprocessing
 def generate_row_wrapper(schema):

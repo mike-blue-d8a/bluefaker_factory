@@ -1,0 +1,34 @@
+domains:
+  - fraud
+
+schema:
+  - column: ID
+    dtype: uuid4
+  - column: Name
+    dtype: name
+  - column: Email
+    dtype: email
+  - column: Gender
+    dtype: gender
+  - column: Age
+    dtype: age
+  - column: Country
+    dtype: country
+  - column: Credit_Score
+    dtype: credit_score
+  - column: Annual_Income
+    dtype: annual_income
+  - column: Card_Type
+    dtype: random_element
+    options: ["Visa", "MasterCard", "Amex", "Discover"]
+  - column: Transaction_Amount
+    dtype: last_purchase_amount
+  - column: Transaction_Location
+    dtype: city
+  - column: Device
+    dtype: user_agent
+  - column: Time_Of_Day
+    dtype: time
+  - column: Fraudulent
+    dtype: boolean
+
