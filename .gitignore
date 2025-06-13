@@ -1,5 +1,6 @@
 # Make sure no data files get commited and pushed. 
 data/
+
 # Build system directories
 build/
 dist/
