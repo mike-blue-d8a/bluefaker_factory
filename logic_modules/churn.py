@@ -1,11 +1,22 @@
+from faker import Faker
+fake = Faker()
+
+# Logic for Churn
 def apply(row):
-    if row.get("Subscription_Level") == "Free" and row.get("Num_Sessions", 100) < 10:
+    subscription = row.get("Subscription_Level")
+    sessions = row.get("Num_Sessions", 100)
+    pages = row.get("Pages_Visited", 0)
+    credit_score = row.get("Credit_Score", 999)
+    income = row.get("Annual_Income", 0)
+
+    if subscription == "Free" and sessions < 10:
         row["Churned"] = True
-    elif row.get("Subscription_Level") == "Enterprise" and row.get("Pages_Visited", 0) > 40:
+    elif subscription == "Enterprise" and pages > 40:
         row["Churned"] = False
-    elif row.get("Credit_Score", 999) < 450 and row.get("Annual_Income", 0) < 40000:
+    elif credit_score < 450 and income < 40000:
         row["Churned"] = True
     else:
-        from faker import Faker
-        row["Churned"] = Faker().pybool()
-    return row
+        row["Churned"] = fake.pybool()
+
+    return row 
+

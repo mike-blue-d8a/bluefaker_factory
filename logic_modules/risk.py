@@ -1,3 +1,6 @@
+from faker import Faker
+fake = Faker()
+
 def apply(row):
     row["At_Risk_Flag"] = (
         row.get("Num_Sessions", 0) > 80 and

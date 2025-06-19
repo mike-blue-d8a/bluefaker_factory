@@ -15,17 +15,18 @@ fake = Faker('en-US')
 # Function to generate consistent name and email
 def generate_name_and_email():
     name = fake.name()
-    uname = name.lower().replace(" ", ".")
+    uname = name.lower().replace(" ", ".").replace("'", "")
     email = f"{uname}@{fake.domain_name()}"
     return name, email
 
-# Function to map datatype to faker function
-def get_fake_data(datatype, name=None, email=None, options=None):
+
+# Function to map faker_type to faker function
+def get_fake_data(faker_type, name=None, email=None, options=None):
     # Handle options if specified
-    if datatype == "random_element" and isinstance(options, list) and options:
+    if faker_type == "random_element" and isinstance(options, list) and options:
         return fake.random_element(elements=options)
 
-    data_type_mapper = {
+    faker_type_mapper = {
         'str': fake.word,
         'name': lambda: name,
         'email': lambda: email,
@@ -181,10 +182,9 @@ def get_fake_data(datatype, name=None, email=None, options=None):
         'pystr': fake.pystr,
         'pystruct': fake.pystruct,
         'pytimezone': fake.pytimezone,
-        #'pydate': fake.pydate,
-        #'pydate_range': fake.pydate_range,
-        #'pydate_time': fake.pydate_time,
-        #'pydate_time_range': fake.pydate_time_range,
+        'datetime_date': fake.date_object,  # returns datetime.date
+        'datetime_range': lambda: fake.date_between(start_date='-2y', end_date='today'),
+        'datetime': fake.date_time, 
         # Add to the map
         # Controlled ML-style types
     	'gender': lambda: random.choice(["Male", "Female", "Non-binary"]),
@@ -198,27 +198,37 @@ def get_fake_data(datatype, name=None, email=None, options=None):
     	'age': lambda: random.randint(18, 90),
 
     }
-    
-    # Return the generated fake data based on the datatype
-    return data_type_mapper.get(datatype, fake.word)()
+
+    # Return the generated fake data based on the faker_type
+    return faker_type_mapper.get(faker_type, fake.word)()
 
 def generate_row(schema):
-    name, email = generate_name_and_email()
+    row = {}
 
-    row = {
-    item['column']: get_fake_data(
-        item['dtype'],
-        name=name,
-        email=email,
-        options=item.get("options")  # ✅ Pass options if present
-    )
-    for item in schema['schema']
-}
+    for item in schema['schema']:
+        # Generate name/email only if needed
+        if item['faker_type'] in ['name', 'email']:
+            name, email = generate_name_and_email()
+        else:
+            name, email = None, None
 
+        # Smart nullable handling: default to 0% if not set
+        nullable_chance = item.get("nullable", 0)
 
-    domains = schema.get("domains", [])
+        if isinstance(nullable_chance, (int, float)) and nullable_chance > 0:
+            if random.uniform(0, 100) < nullable_chance:
+                row[item["column"]] = None
+                continue  # skip generating data
 
-    for domain in domains:
+        # Generate data if not null
+        row[item['column']] = get_fake_data(
+            item['faker_type'],
+            name=name,
+            email=email,
+            options=item.get("options")
+        )
+
+    for domain in schema.get("domains", []):
         try:
             mod = importlib.import_module(f"logic_modules.{domain}")
             row = mod.apply(row)
@@ -226,6 +236,8 @@ def generate_row(schema):
             print(f"[WARN] No logic module found: {domain}")
 
     return row
+
+
 
 # Wrapper function to generate row for multiprocessing
 def generate_row_wrapper(schema):

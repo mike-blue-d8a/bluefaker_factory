@@ -1,36 +1,76 @@
+domains:
+  - churn
+
 schema:
   - column: ID
-    dtype: uuid4
+    dtype: string
+    faker_type: uuid4
+
   - column: Name
-    dtype: name
+    dtype: string
+    faker_type: name
+
   - column: Email
-    dtype: email
+    dtype: string
+    faker_type: email
+
   - column: Gender
-    dtype: gender
+    dtype: string
+    faker_type: gender
+    nullable: 15
+
   - column: Age
-    dtype: age
+    dtype: integer
+    faker_type: age
+
   - column: Country
-    dtype: country
+    dtype: string
+    faker_type: country
+
   - column: State
-    dtype: state
+    dtype: string
+    faker_type: state
+
   - column: Signup_Date
-    dtype: date
+    dtype: string
+    faker_type: datetime_range
+
   - column: Device
-    dtype: user_agent
+    dtype: string
+    faker_type: user_agent
+    nullable: 10
+
   - column: Num_Sessions
-    dtype: num_sessions
+    dtype: integer
+    faker_type: num_sessions
+
   - column: Avg_Session_Duration_Min
-    dtype: avg_session_duration_min
+    dtype: float
+    faker_type: avg_session_duration_min
+
   - column: Pages_Visited
-    dtype: pages_visited
+    dtype: integer
+    faker_type: pages_visited
+
   - column: Subscription_Level
-    dtype: subscription_level
+    dtype: string
+    faker_type: subscription_level
+
   - column: Churned
     dtype: boolean
+    faker_type: boolean
+
   - column: Credit_Score
-    dtype: credit_score
+    dtype: integer
+    faker_type: credit_score
+    nullable: 10
+
   - column: Annual_Income
-    dtype: annual_income
+    dtype: integer
+    faker_type: annual_income
+
   - column: Last_Purchase_Amount
-    dtype: last_purchase_amount
+    dtype: float
+    faker_type: last_purchase_amount
+
 
