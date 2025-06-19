@@ -3,6 +3,8 @@ from faker import Faker
 
 fake = Faker()
 
+# Fraud Logic
+
 def apply(row):
     country = row.get("Country", "")
     credit_score = row.get("Credit_Score", 700)

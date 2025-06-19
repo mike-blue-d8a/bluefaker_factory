@@ -1,4 +1,5 @@
 #  bluefaker_factory
+“Fake data that's actually useful for data engineers testing real-world pipelines.”
 
 A modular, schema-driven synthetic data generator built with [Faker](https://faker.readthedocs.io/en/master/) for simulating rich, realistic datasets. Ideal for machine learning testing, analytics development, data engineering demos, and pipeline validation.
 
@@ -40,8 +41,14 @@ Usage
 
 ### Install dependencies
 ```bash
-pip install -r requirements.txt
+pip install .
 ````
+Create directories:
+```
+make install
+
+make clean
+```
 
 ### Generate data with a YAML schema
 
@@ -65,6 +72,110 @@ python bluefaker.py \
   --file data/raw/YOUR_DATA_NAME \
   --append
 ```
+
+---
+## Schema Config Overview
+
+The schema config defines how your fake data should be structured. It uses a YAML format to describe each column's characteristics, such as its name, data type, faker source, nullability, and value options.
+
+At its simplest, you only need to specify the column name and the `faker_type` to generate data:
+
+```yaml
+- column: Card_Type           # Column name in your dataset
+  faker_type: random_element  # Faker method or type
+```
+
+However, for more realistic and flexible data, we recommend using all available configuration options:
+
+| Key          | Required? | Description                                                                        |
+| ------------ | --------- | ---------------------------------------------------------------------------------- |
+| `column`     | yes        | Name of the column in the output dataset                                           |
+| `faker_type` | yes        | The type of fake data to use (from Faker or custom)                                |
+| `dtype`      | no         | The data type for Iceberg or DB schema (e.g., `string`, `integer`)                 |
+| `nullable`   | no         | % chance (0–100) that the value will be `null`, simulating real-world missing data |
+| `options`    | no         | A list of allowed values (like an enum), used with `faker_type: random_element`    |
+
+
+*Example:*
+
+This config means:
+
+- The column is called Card_Type
+- It will be a string type in your database / lakehouse 
+- It will contain one of four credit card types
+- 15% of the rows will have a null value for this column
+
+
+```yaml
+- column: Card_Type
+  dtype: string
+  faker_type: random_element
+  nullable: 15
+  options: ["Visa", "MasterCard", "Amex", "Discover"]
+```
+
+## Extendable Rule-Based Logic (Plugin)
+
+To simulate realistic behavioral signals in your synthetic data like **fraud**, **churn**, or **VIP customer patterns** — `bluefaker_factory` supports **pluggable domain logic modules**.
+
+Each YAML schema can declare one or more `domains`, and the generator will dynamically apply the corresponding rule logic from the `logic_modules/` folder.
+
+### Example Schema Snippet
+
+```yaml
+       │ File: schemas/fraud_schema.yaml
+───────┼────────────────────────────────────────────────────────────────────────────────────────────────────
+domains:
+  - fraud
+
+schema:
+  - column: ID
+    dtype: string
+    faker_type: uuid4
+  
+  - column: Name
+    dtype: string
+    faker_type: name
+  
+  ...
+```
+
+This will automatically load and apply:
+
+* `logic_modules/fraud.py`
+* `logic_modules/churn.py`
+
+---
+
+### How It Works
+
+Each logic module (e.g. `fraud.py`, `churn.py`, etc.) must define an `apply(row)` function that adds fields, flags, or modifications to the generated row.
+
+Example logic (`logic_modules/churn.py`):
+
+```python
+def apply(row):
+    if row.get("Subscription_Level") == "Free" and row.get("Num_Sessions", 0) < 10:
+        row["Churned"] = True
+    return row
+```
+
+The main generator uses Python's `importlib` to load these dynamically based on the `domains` listed in the schema.
+
+---
+
+### Add Your Own Logic
+
+1. Create a new file in `logic_modules/`, like `vip.py`
+2. Define an `apply(row)` function inside it
+3. Reference it in your schema YAML:
+
+```yaml
+domains:
+  - vip
+```
+
+That’s it, your logic is now applied automatically during data generation.
 
 ---
 
@@ -133,69 +244,6 @@ This create the file with 100k rows in 25 seconds.
 | `ml_schema.yml`              | General-purpose features for ML training/testing |
 
 > You can create your own by copying an existing one and modifying columns/types.
-
-## Extendable Rule-Based Logic (Plugin)
-
-To simulate realistic behavioral signals in your synthetic data like **fraud**, **churn**, or **VIP customer patterns** — `bluefaker_factory` supports **pluggable domain logic modules**.
-
-Each YAML schema can declare one or more `domains`, and the generator will dynamically apply the corresponding rule logic from the `logic_modules/` folder.
-
-### Example Schema Snippet
-
-```yaml
-domains:
-  - fraud
-  - churn
-
-schema:
-  - column: ID
-    dtype: uuid4
-  - column: Name
-    dtype: name
-  - column: Email
-    dtype: email
-  ......
-
-```
-
-This will automatically load and apply:
-
-* `logic_modules/fraud.py`
-* `logic_modules/churn.py`
-
----
-
-### How It Works
-
-Each logic module (e.g. `fraud.py`, `churn.py`, etc.) must define an `apply(row)` function that adds fields, flags, or modifications to the generated row.
-
-Example logic (`logic_modules/churn.py`):
-
-```python
-def apply(row):
-    if row.get("Subscription_Level") == "Free" and row.get("Num_Sessions", 0) < 10:
-        row["Churned"] = True
-    return row
-```
-
-The main generator uses Python's `importlib` to load these dynamically based on the `domains` listed in the schema.
-
----
-
-### Add Your Own Logic
-
-1. Create a new file in `logic_modules/`, like `vip.py`
-2. Define an `apply(row)` function inside it
-3. Reference it in your schema YAML:
-
-```yaml
-domains:
-  - vip
-```
-
-That’s it, your logic is now applied automatically during data generation.
-
----
 
 ## Analyze the Data
 
